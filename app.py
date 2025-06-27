@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
 
 # === PAGE SETUP ===
 st.set_page_config(page_title="Supermarket Sales Dashboard", layout="wide")
@@ -14,7 +13,7 @@ def load_data():
 
 df = load_data()
 
-# Convert 'Date' to datetime (in case it's not)
+# Convert 'Date' to datetime
 df['Date'] = pd.to_datetime(df['Date'])
 
 # === SIDEBAR FILTERS ===
@@ -57,44 +56,60 @@ col3.metric("💼 Gross Income", f"${gross_income:,.2f}")
 
 # === SALES BY PRODUCT LINE ===
 st.subheader("📦 Sales by Product Line")
-sales_by_product = filtered_df.groupby("Product line")["Sales"].sum().sort_values()
+sales_by_product = filtered_df.groupby("Product line")["Sales"].sum().sort_values().reset_index()
 
-fig1, ax1 = plt.subplots(figsize=(10, 5))
-sales_by_product.plot(kind="barh", color="teal", ax=ax1)
-ax1.set_xlabel("Sales")
-st.pyplot(fig1)
+fig1 = px.bar(
+    sales_by_product,
+    x="Sales",
+    y="Product line",
+    orientation="h",
+    title="Sales by Product Line",
+    color="Sales",
+    color_continuous_scale="Teal"
+)
+st.plotly_chart(fig1, use_container_width=True)
 
 # === MONTHLY SALES TREND ===
 st.subheader("📈 Monthly Sales Trend")
-filtered_df["Month"] = filtered_df["Date"].dt.to_period("M")
-monthly_sales = filtered_df.groupby("Month")["Sales"].sum()
+filtered_df["Month"] = filtered_df["Date"].dt.to_period("M").astype(str)
+monthly_sales = filtered_df.groupby("Month")["Sales"].sum().reset_index()
 
-fig2, ax2 = plt.subplots(figsize=(10, 4))
-monthly_sales.plot(marker="o", ax=ax2)
-ax2.set_ylabel("Sales")
-ax2.set_title("Monthly Sales Trend")
-st.pyplot(fig2)
+fig2 = px.line(
+    monthly_sales,
+    x="Month",
+    y="Sales",
+    markers=True,
+    title="Monthly Sales Trend"
+)
+st.plotly_chart(fig2, use_container_width=True)
 
 # === RATING DISTRIBUTION ===
 st.subheader("🎯 Rating Distribution by Customer Type")
-fig3, ax3 = plt.subplots()
-sns.boxplot(data=filtered_df, x="Customer type", y="Rating", palette="Pastel1", ax=ax3)
-st.pyplot(fig3)
+fig3 = px.box(
+    filtered_df,
+    x="Customer type",
+    y="Rating",
+    color="Customer type",
+    title="Customer Rating Distribution"
+)
+st.plotly_chart(fig3, use_container_width=True)
+
+# === PAYMENT METHOD PIE CHART ===
+st.subheader("💳 Payment Method Breakdown")
+payment_counts = filtered_df["Payment"].value_counts().reset_index()
+payment_counts.columns = ["Payment Method", "Count"]
+
+fig4 = px.pie(
+    payment_counts,
+    names="Payment Method",
+    values="Count",
+    title="Payment Method Breakdown"
+)
+st.plotly_chart(fig4, use_container_width=True)
 
 # === RAW DATA (Optional) ===
 with st.expander("📄 Show Raw Data"):
     st.dataframe(filtered_df)
-
-# === PAYMENT METHOD PIE CHART ===
-st.subheader("💳 Payment Method Breakdown")
-
-payment_counts = filtered_df["Payment"].value_counts()
-
-fig4, ax4 = plt.subplots()
-ax4.pie(payment_counts, labels=payment_counts.index, autopct="%1.1f%%", startangle=90)
-ax4.axis("equal")  # Equal aspect ratio makes pie a circle
-st.pyplot(fig4)
-
 
 # === DOWNLOAD FILTERED DATA ===
 csv = filtered_df.to_csv(index=False).encode('utf-8')
