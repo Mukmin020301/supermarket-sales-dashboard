@@ -80,5 +80,5 @@ Then open http://localhost:8501 in your browser.
 Made with 💙 by Abdul Mukmin
 
 📧 Email: mukmin020301@gmail.com
-🔗 LinkedIn: https://linkedin.com/in/your-username
+🔗 LinkedIn: https://www.linkedin.com/in/abdul-mukmin-b3576023b/
 🐙 GitHub: https://github.com/Mukmin020301
